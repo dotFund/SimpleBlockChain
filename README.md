@@ -11,3 +11,4 @@ Make a new blockchain
  7. verify
  
 # Finished
+ 1. Developing p2p network. Not Finished.
