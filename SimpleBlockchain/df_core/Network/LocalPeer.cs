@@ -28,6 +28,9 @@ namespace SimpleBlockchain.Network
         //private IWebHost ws_host;
         private Thread connectThread;
         private Thread poolThread;
+
+        private int started = 0;
+        private int disposed = 0;
         private CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
 
         public bool GlobalMissionsEnabled { get; set; } = true;
@@ -248,6 +251,82 @@ namespace SimpleBlockchain.Network
         public void Dispose()
         {
 
+        }
+        private static bool IsIntranetAddress(IPAddress address)
+        {
+            byte[] data = address.MapToIPv4().GetAddressBytes();
+            Array.Reverse(data);
+            uint value = data.ToUInt32(0);
+            return (value & 0xff000000) == 0x0a000000 ||    //12.xx.xx.xx
+                (value & 0xff000000) == 0x7f000000 ||       //127.xx.xx.xx
+                (value & 0xfff00000) == 0xac100000 ||       //172.16.xx.xx ~ 172.31.xx.xx
+                (value & 0xffff0000) == 0xc0a80000 ||       //192.168.xx.xx
+                (value & 0xffff0000) == 0xa9fe0000;         //169.254.xx.xx
+        }
+
+        private async void AcceptPeers()
+        {
+            while (!cancellationTokenSource.IsCancellationRequested)
+            {
+                Socket socket;
+                try
+                {
+                    socket = await listener.AcceptSocketAsync();
+                }
+                catch (ObjectDisposedException)
+                {
+                    break;
+                }
+                catch (SocketException)
+                {
+                    continue;
+                }
+                TcpRemotePeer remoteNode = new TcpRemotePeer(this, socket);
+                OnConnected(remoteNode);
+            }
+        }
+
+        public void Start(int port = 0, int ws_port = 0)
+        {
+            if (Interlocked.Exchange(ref started, 1) == 0)
+            {
+                Task.Run(async () =>
+                {
+                    if ((port > 0 || ws_port > 0)
+                        && UpnpEnabled
+                        && LocalAddresses.All(p => !p.IsIPv4MappedToIPv6 || IsIntranetAddress(p))
+                        && await UPnP.DiscoverAsync())
+                    {
+                        try
+                        {
+                            LocalAddresses.Add(await UPnP.GetExternalIPAsync());
+                            if (port > 0)
+                                await UPnP.ForwardPortAsync(port, ProtocolType.Tcp, "PURE");
+                            if (ws_port > 0)
+                                await UPnP.ForwardPortAsync(ws_port, ProtocolType.Tcp, "PURE WebSocket");
+                        }
+                        catch { }
+                    }
+                    connectThread.Start();
+                    poolThread?.Start();
+                    if (port > 0)
+                    {
+                        listener = new TcpListener(IPAddress.Any, port);
+                        try
+                        {
+                            listener.Start();
+                            Port = (ushort)port;
+                            AcceptPeers();
+                        }
+                        catch (SocketException) { }
+                    }
+                    if (ws_port > 0)
+                    {
+                        //ws_host = new WebHostBuilder().UseKestrel().UseUrls($"http://*:{ws_port}").Configure(app => app.UseWebSockets().Run(ProcessWebSocketAsync)).Build();
+                        //ws_host.Start();
+                    }
+                });
+            }
         }
     }
 }
