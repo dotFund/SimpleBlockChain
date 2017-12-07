@@ -91,6 +91,32 @@ namespace SimpleBlockchain.Network
         protected abstract Task<bool> SendMessageAsync(Message message);
         protected abstract Task<Message> ReceiveMessageAsync(TimeSpan timeout);
 
+        private async void StartSendLoop()
+        {
+            while (disposed == 0)
+            {
+                Message message = null;
+                lock (message_queue)
+                {
+                    if (message_queue.Count > 0)
+                    {
+                        message = message_queue.Dequeue();
+                    }
+                }
+                if (message == null)
+                {
+                    for (int i = 0; i < 10 && disposed == 0; i++)
+                    {
+                        Thread.Sleep(100);
+                    }
+                }
+                else
+                {
+                    await SendMessageAsync(message);
+                }
+            }
+        }
+
         internal async void StartProtocol()
         {
             if (!await SendMessageAsync(Message.Create("version", VersionPayload.Create(localNode.Port, localNode.Nonce, localNode.UserAgent))))
@@ -156,17 +182,19 @@ namespace SimpleBlockchain.Network
             {
                 EnqueueMessage("getheaders", GetBlocksPayload.Create(Blockchain.Default.CurrentHeaderHash), true);
             }
+            */
             StartSendLoop();
             
             while (disposed == 0)
             {
+                /*
                 if (Blockchain.Default != null)
                 {
                     if (missions.Count == 0 && Blockchain.Default.Height < Version.StartHeight)
                     {
                         EnqueueMessage("getblocks", GetBlocksPayload.Create(Blockchain.Default.CurrentBlockHash), true);
                     }
-                }
+                } */
                 TimeSpan timeout = missions.Count == 0 ? HalfHour : OneMinute;
                 message = await ReceiveMessageAsync(timeout);
                 if (message == null) break;
@@ -190,7 +218,89 @@ namespace SimpleBlockchain.Network
                     Disconnect(true);
                     break;
                 }
-            }*/
+            }
+        }
+
+        private void OnMessageReceived(Message message)
+        {
+            switch (message.Command)
+            {
+                case "addr":
+                    //OnAddrMessageReceived(message.Payload.AsSerializable<AddrPayload>());
+                    break;
+                case "block":
+                    //OnInventoryReceived(message.Payload.AsSerializable<Block>());
+                    break;
+                case "consensus":
+                    //OnInventoryReceived(message.Payload.AsSerializable<ConsensusPayload>());
+                    break;
+                case "filteradd":
+                    //OnFilterAddMessageReceived(message.Payload.AsSerializable<FilterAddPayload>());
+                    break;
+                case "filterclear":
+                    //OnFilterClearMessageReceived();
+                    break;
+                case "filterload":
+                    //OnFilterLoadMessageReceived(message.Payload.AsSerializable<FilterLoadPayload>());
+                    break;
+                case "getaddr":
+                    OnGetAddrMessageReceived();
+                    break;
+                case "getblocks":
+                    //OnGetBlocksMessageReceived(message.Payload.AsSerializable<GetBlocksPayload>());
+                    break;
+                case "getdata":
+                    //OnGetDataMessageReceived(message.Payload.AsSerializable<InvPayload>());
+                    break;
+                case "getheaders":
+                    //OnGetHeadersMessageReceived(message.Payload.AsSerializable<GetBlocksPayload>());
+                    break;
+                case "headers":
+                    //OnHeadersMessageReceived(message.Payload.AsSerializable<HeadersPayload>());
+                    break;
+                case "inv":
+                    //OnInvMessageReceived(message.Payload.AsSerializable<InvPayload>());
+                    break;
+                case "mempool":
+                    //OnMemPoolMessageReceived();
+                    break;
+                case "tx":
+                    //if (message.Payload.Length <= 1024 * 1024)
+                    //    OnInventoryReceived(Transaction.DeserializeFrom(message.Payload));
+                    break;
+                case "verack":
+                case "version":
+                    Disconnect(true);
+                    break;
+                case "alert":
+                case "merkleblock":
+                case "notfound":
+                case "ping":
+                case "pong":
+                case "reject":
+                default:
+                    //暂时忽略
+                    break;
+            }
+        }
+
+        private void OnGetAddrMessageReceived()
+        {
+            if (!localNode.ServiceEnabled) return;
+            AddrPayload payload;
+            lock (localNode.connectedPeers)
+            {
+                const int MaxCountToSend = 200;
+                IEnumerable<RemotePeer> peers = localNode.connectedPeers.Where(p => p.ListenerEndpoint != null && p.Version != null);
+                if (localNode.connectedPeers.Count > MaxCountToSend)
+                {
+                    Random rand = new Random();
+                    peers = peers.OrderBy(p => rand.Next());
+                }
+                peers = peers.Take(MaxCountToSend);
+                payload = AddrPayload.Create(peers.Select(p => NetworkAddressWithTime.Create(p.ListenerEndpoint, p.Version.Services, p.Version.Timestamp)).ToArray());
+            }
+            EnqueueMessage("addr", payload, true);
         }
     }
 }

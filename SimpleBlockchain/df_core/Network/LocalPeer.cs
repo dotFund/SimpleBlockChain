@@ -7,6 +7,8 @@ using System.Net.NetworkInformation;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using System.IO;
+using System.Text;
 
 namespace SimpleBlockchain.Network
 {
@@ -113,6 +115,42 @@ namespace SimpleBlockchain.Network
                 for (int i = 0; i < 50 && !cancellationTokenSource.IsCancellationRequested; i++)
                 {
                     Thread.Sleep(100);
+                }
+            }
+        }
+
+        public static void SaveState(Stream stream)
+        {
+            IPEndPoint[] peers;
+            lock (unconnectedPeers)
+            {
+                peers = unconnectedPeers.Take(UnconnectedMax).ToArray();
+            }
+            using (BinaryWriter writer = new BinaryWriter(stream, Encoding.ASCII, true))
+            {
+                writer.Write(peers.Length);
+                foreach (IPEndPoint endpoint in peers)
+                {
+                    writer.Write(endpoint.Address.MapToIPv4().GetAddressBytes());
+                    writer.Write((ushort)endpoint.Port);
+                }
+            }
+        }
+
+        public static void LoadState(Stream stream)
+        {
+            lock (unconnectedPeers)
+            {
+                unconnectedPeers.Clear();
+                using (BinaryReader reader = new BinaryReader(stream, Encoding.ASCII, true))
+                {
+                    int count = reader.ReadInt32();
+                    for (int i = 0; i < count; i++)
+                    {
+                        IPAddress address = new IPAddress(reader.ReadBytes(4));
+                        int port = reader.ReadUInt16();
+                        unconnectedPeers.Add(new IPEndPoint(address.MapToIPv6(), port));
+                    }
                 }
             }
         }

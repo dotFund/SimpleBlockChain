@@ -22,5 +22,52 @@ namespace SimpleBlockchain.Properties {
                 return defaultInstance;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool NeedUpgrade {
+            get {
+                return ((bool)(this["NeedUpgrade"]));
+            }
+            set {
+                this["NeedUpgrade"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string LastWalletPath {
+            get {
+                return ((string)(this["LastWalletPath"]));
+            }
+            set {
+                this["LastWalletPath"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool InstallCertificate {
+            get {
+                return ((bool)(this["InstallCertificate"]));
+            }
+            set {
+                this["InstallCertificate"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        public global::System.Collections.Specialized.StringCollection NEP5Watched {
+            get {
+                return ((global::System.Collections.Specialized.StringCollection)(this["NEP5Watched"]));
+            }
+            set {
+                this["NEP5Watched"] = value;
+            }
+        }
     }
 }
