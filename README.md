@@ -12,4 +12,6 @@ Make a new blockchain
  8. verify
  
 # Finished
- 1. Developing p2p network. Not Finished.
+ 1. P2P finished
+ 2. message function finished
+ 3. Dveloping Wallet

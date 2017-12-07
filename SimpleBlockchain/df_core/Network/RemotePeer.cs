@@ -226,7 +226,7 @@ namespace SimpleBlockchain.Network
             switch (message.Command)
             {
                 case "addr":
-                    //OnAddrMessageReceived(message.Payload.AsSerializable<AddrPayload>());
+                    OnAddrMessageReceived(message.Payload.AsSerializable<AddrPayload>());
                     break;
                 case "block":
                     //OnInventoryReceived(message.Payload.AsSerializable<Block>());
@@ -301,6 +301,12 @@ namespace SimpleBlockchain.Network
                 payload = AddrPayload.Create(peers.Select(p => NetworkAddressWithTime.Create(p.ListenerEndpoint, p.Version.Services, p.Version.Timestamp)).ToArray());
             }
             EnqueueMessage("addr", payload, true);
+        }
+
+        private void OnAddrMessageReceived(AddrPayload payload)
+        {
+            IPEndPoint[] peers = payload.AddressList.Select(p => p.EndPoint).Where(p => p.Port != localNode.Port || !LocalPeer.LocalAddresses.Contains(p.Address)).ToArray();
+            if (peers.Length > 0) PeersReceived?.Invoke(this, peers);
         }
     }
 }
