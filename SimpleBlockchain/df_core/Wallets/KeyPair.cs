@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text;
 using SimpleBlockchain.Core;
 using SimpleBlockchain.Cryptography;
+using SimpleBlockchain.SmartContract;
 
 namespace SimpleBlockchain.Wallets
 {
