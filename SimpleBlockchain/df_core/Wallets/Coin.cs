@@ -10,6 +10,7 @@ namespace SimpleBlockchain.Wallets
         public TransactionOutput Output;
 
         private string _address = null;
+
         public string Address
         {
             get

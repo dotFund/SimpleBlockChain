@@ -40,7 +40,7 @@ namespace SimpleBlockchain.Core
             return new UInt160(Crypto.Default.Hash160(script));
         }
 
-        /*
+        
         internal static bool VerifyScripts(this IVerifiable verifiable)
         {
             UInt160[] hashes;
@@ -76,6 +76,6 @@ namespace SimpleBlockchain.Core
             }
             return true;
         }
-        */
+        
     }
 }
