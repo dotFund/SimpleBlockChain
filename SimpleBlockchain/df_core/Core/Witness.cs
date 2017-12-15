@@ -23,10 +23,6 @@ namespace SimpleBlockchain.Core
             writer.WriteVarBytes(VerificationScript);
         }
 
-        /// <summary>
-        /// 变成json对象
-        /// </summary>
-        /// <returns>返回json对象</returns>
         public JObject ToJson()
         {
             JObject json = new JObject();

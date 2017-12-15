@@ -5,6 +5,7 @@ using System.Linq;
 using SimpleBlockchain.IO;
 using SimpleBlockchain.Cryptography;
 using SimpleBlockchain.VM;
+using SimpleBlockchain.SmartContract;
 
 namespace SimpleBlockchain.Core
 {
