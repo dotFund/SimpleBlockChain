@@ -14,14 +14,7 @@ namespace SimpleBlockchain.Core
 {
     public abstract class Transaction : IEquatable<Transaction>, IInventory
     {
-        /// <summary>
-        /// Maximum number of attributes that can be contained within a transaction
-        /// </summary>
         private const int MaxTransactionAttributes = 16;
-
-        /// <summary>
-        /// Reflection cache for TransactionType
-        /// </summary>
         private static ReflectionCache<byte> ReflectionCache = ReflectionCache<byte>.CreateFromEnum<TransactionType>();
 
         public readonly TransactionType Type;

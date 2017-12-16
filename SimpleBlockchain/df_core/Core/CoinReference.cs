@@ -6,18 +6,9 @@ using SimpleBlockchain.VM;
 
 namespace SimpleBlockchain.Core
 {
-    /// <summary>
-    /// CoinReference
-    /// </summary>
     public class CoinReference : IEquatable<CoinReference>, IInteropInterface, ISerializable
     {
-        /// <summary>
-        /// PrevHash
-        /// </summary>
         public UInt256 PrevHash;
-        /// <summary>
-        /// PrevIndex
-        /// </summary>
         public ushort PrevIndex;
 
         public int Size => PrevHash.Size + sizeof(ushort);

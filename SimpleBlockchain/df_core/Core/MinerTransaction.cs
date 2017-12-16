@@ -33,10 +33,6 @@ namespace SimpleBlockchain.Core
                 throw new FormatException();
         }
 
-        /// <summary>
-        /// 序列化交易中的额外数据
-        /// </summary>
-        /// <param name="writer">存放序列化后的结果 </param>
         protected override void SerializeExclusiveData(BinaryWriter writer)
         {
             writer.Write(Nonce);
